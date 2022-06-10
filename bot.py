@@ -18,6 +18,7 @@ class Modes(TypedDict):
 
 class Config(TypedDict):
     credentials: Credentials
+    host: Optional[str]
     modes: Modes
 
 
@@ -66,6 +67,16 @@ def main():
     if validate_config(config) is False:
         print("[fatal] missing required config")
         return
+
+    try:
+        host = config["host"] or "stackoverflow.com"
+        email = config["credentials"]["email"]
+        pwd = config["credentials"]["password"]
+
+        client = chatexchange.Client(host)
+        client.login(email, pwd)
+    except Exception as e:
+        print(f"[fatal] failed to log in\n{e}")
 
 if __name__ == '__main__':
     main()
