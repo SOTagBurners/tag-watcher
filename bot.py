@@ -1,6 +1,6 @@
 import builtins
 import io
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 import chatexchange
 import yaml
@@ -12,8 +12,13 @@ class Credentials(TypedDict):
     password: str
 
 
+class Modes(TypedDict):
+    debug: Optional[bool]
+    verbose: Optional[bool]
+
 class Config(TypedDict):
     credentials: Credentials
+    modes: Modes
 
 
 def log_recursive(obj: dict, level=0):
