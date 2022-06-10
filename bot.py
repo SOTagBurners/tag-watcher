@@ -10,6 +10,8 @@ from chatexchange.messages import Message
 from chatexchange.rooms import Room
 from chatexchange.users import User
 
+from watcher import Watcher, watch_new_tags
+
 
 class Credentials(TypedDict):
     api_key: str
@@ -27,6 +29,7 @@ class Config(TypedDict):
     host: Optional[str]
     modes: Modes
     room_id: Optional[int]
+    watcher: Watcher
 
 
 def log_recursive(obj: dict, level=0):
@@ -121,6 +124,8 @@ def main():
 
         if debug:
             room.send_message(f"[{me.name}] reporting for duty")
+
+        watch_new_tags(config["watcher"], client)
 
         while True:
             pass
