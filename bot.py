@@ -3,9 +3,10 @@ import io
 import os
 from typing import Optional, TypedDict
 
-import chatexchange
 import yaml
 from chatexchange.client import Client
+from chatexchange.events import UserMentioned
+from chatexchange.messages import Message
 from chatexchange.rooms import Room
 from chatexchange.users import User
 
@@ -20,11 +21,13 @@ class Modes(TypedDict):
     debug: Optional[bool]
     verbose: Optional[bool]
 
+
 class Config(TypedDict):
     credentials: Credentials
     host: Optional[str]
     modes: Modes
     room_id: Optional[int]
+
 
 def log_recursive(obj: dict, level=0):
     """
@@ -61,6 +64,29 @@ def load_config(config_path: str) -> Config:
 def validate_config(config: Config) -> bool:
     return all(list(config["credentials"].values()))
 
+
+def handle_message(message: Message, client: Client) -> None:
+    """
+    Room message event handler
+    """
+
+    if not isinstance(message, UserMentioned):
+        # ignoring everything except replies
+        return
+
+    me: User = client.get_me()
+
+    replied_to_id = message.target_user_id
+
+    if replied_to_id != me.id:
+        # ignoring everything except replies to bot
+        return
+
+    content: str = message.content
+
+    print(content)
+
+
 def main():
     """
     Bot startup
@@ -91,7 +117,7 @@ def main():
         room.join()
         print(f"joined room {room_id} ({host})")
 
-        # room.watch_socket()
+        room.watch_socket(handle_message)
 
         if debug:
             room.send_message(f"[{me.name}] reporting for duty")
@@ -104,6 +130,7 @@ def main():
 
     except Exception as e:
         print(f"[fatal] failed to log in\n{e}")
+
 
 if __name__ == '__main__':
     main()
