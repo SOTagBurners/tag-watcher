@@ -1,9 +1,13 @@
 import builtins
 import io
+import os
 from typing import Optional, TypedDict
 
 import chatexchange
 import yaml
+from chatexchange.client import Client
+from chatexchange.rooms import Room
+from chatexchange.users import User
 
 
 class Credentials(TypedDict):
@@ -20,7 +24,7 @@ class Config(TypedDict):
     credentials: Credentials
     host: Optional[str]
     modes: Modes
-
+    room_id: Optional[int]
 
 def log_recursive(obj: dict, level=0):
     """
@@ -68,13 +72,36 @@ def main():
         print("[fatal] missing required config")
         return
 
+    credentials = config["credentials"]
+    modes = config["modes"]
+    debug = modes["debug"] is True
+
     try:
         host = config["host"] or "stackoverflow.com"
-        email = config["credentials"]["email"]
-        pwd = config["credentials"]["password"]
+        email = credentials["email"]
+        pwd = credentials["password"]
+        room_id = config["room_id"] or 244740
 
-        client = chatexchange.Client(host)
+        client = Client(host)
         client.login(email, pwd)
+        me: User = client.get_me()
+        print(f"logged in as {me.name}")
+
+        room: Room = client.get_room(room_id)
+        room.join()
+        print(f"joined room {room_id} ({host})")
+
+        # room.watch_socket()
+
+        if debug:
+            room.send_message(f"[{me.name}] reporting for duty")
+
+        while True:
+            pass
+
+    except KeyboardInterrupt:
+        os._exit(0)
+
     except Exception as e:
         print(f"[fatal] failed to log in\n{e}")
 
